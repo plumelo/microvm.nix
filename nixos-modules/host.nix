@@ -67,6 +67,14 @@ in
         Restart MicroVM services on `nixos-rebuild switch` of the host?
       '';
     };
+
+    autoupdate = mkOption {
+      type = types.bool;
+      default = false;
+      description = ''
+        Deploy updates to microvms that already exist.
+      '';
+    };
   };
 
   config = lib.mkIf config.microvm.host.enable {
@@ -114,7 +122,7 @@ in
         partOf = [ "microvm@${name}.service" ];
         wantedBy = [ "microvms.target" ];
         # only run if /var/lib/microvms/$name does not exist yet
-        unitConfig.ConditionPathExists = "!${stateDir}/${name}";
+        unitConfig.ConditionPathExists = lib.mkIf (!config.microvm.autoupdate) "!${stateDir}/${name}";
         serviceConfig.Type = "oneshot";
         script =
           let
